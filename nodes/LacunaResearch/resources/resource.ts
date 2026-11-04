@@ -1,0 +1,138 @@
+import type { INodeProperties } from 'n8n-workflow';
+import {
+	idFromParameter,
+	itemsFrom,
+	limitField,
+	offsetOption,
+	RESOURCE_ID,
+	resourceKindOption,
+	resourceProviderOption,
+	resourceSortOption,
+} from './shared';
+
+const resourceId = idFromParameter('resourceId', RESOURCE_ID);
+const show = { resource: ['resource'] };
+
+export const resourceDescription: INodeProperties[] = [
+	{
+		displayName: 'Operation',
+		name: 'operation',
+		type: 'options',
+		noDataExpression: true,
+		displayOptions: { show },
+		options: [
+			{
+				name: 'Get',
+				value: 'get',
+				action: 'Get resource',
+				description:
+					'Get a code repository, dataset, model, or demo with the papers it is linked to',
+				routing: { request: { method: 'GET', url: `=/api/v1/resources/{{ ${resourceId} }}` } },
+			},
+			{
+				name: 'Get Many',
+				value: 'getAll',
+				action: 'Get many resources',
+				description: 'Get many code repositories, datasets, models, and demos linked to papers',
+				routing: {
+					request: { method: 'GET', url: '/api/v1/resources' },
+					output: itemsFrom('resources'),
+				},
+			},
+		],
+		default: 'getAll',
+	},
+	{
+		displayName: 'Resource ID',
+		name: 'resourceId',
+		type: 'string',
+		required: true,
+		default: '',
+		placeholder: 'e.g. art_0ee4928b59574811aec2a3c899fcbc7f',
+		description: 'Lacuna resource ID (art_…) or the URL of a Lacuna resource page',
+		displayOptions: { show: { ...show, operation: ['get'] } },
+	},
+	limitField({ ...show, operation: ['getAll'] }, 200),
+	{
+		displayName: 'Filters',
+		name: 'filters',
+		type: 'collection',
+		placeholder: 'Add Filter',
+		default: {},
+		displayOptions: { show: { ...show, operation: ['getAll'] } },
+		options: [
+			{
+				displayName: 'Direction ID',
+				name: 'directionId',
+				type: 'string',
+				default: '',
+				description: 'Only resources linked to papers in this research direction',
+				routing: { send: { type: 'query', property: 'direction_id' } },
+			},
+			resourceKindOption,
+			{
+				displayName: 'Min Downloads',
+				name: 'minDownloads',
+				type: 'number',
+				default: 0,
+				typeOptions: { minValue: 0 },
+				description: 'Only resources with at least this many downloads',
+				routing: { send: { type: 'query', property: 'min_downloads' } },
+			},
+			{
+				displayName: 'Min Stars',
+				name: 'minStars',
+				type: 'number',
+				default: 0,
+				typeOptions: { minValue: 0 },
+				description: 'Only resources with at least this many stars',
+				routing: { send: { type: 'query', property: 'min_stars' } },
+			},
+			offsetOption,
+			{
+				displayName: 'Owner Author ID',
+				name: 'ownerAuthorId',
+				type: 'string',
+				default: '',
+				description: 'Only resources owned by this Lacuna author (aut_…)',
+				routing: { send: { type: 'query', property: 'owner_author_id' } },
+			},
+			{
+				displayName: 'Paper Author ID',
+				name: 'paperAuthorId',
+				type: 'string',
+				default: '',
+				description: 'Only resources linked to papers by this Lacuna author (aut_…)',
+				routing: { send: { type: 'query', property: 'paper_author_id' } },
+			},
+			{
+				displayName: 'Paper ID',
+				name: 'paperId',
+				type: 'string',
+				default: '',
+				description: 'Only resources linked to this paper (art_…)',
+				routing: { send: { type: 'query', property: 'paper_id' } },
+			},
+			resourceProviderOption,
+			{
+				displayName: 'Query',
+				name: 'query',
+				type: 'string',
+				default: '',
+				placeholder: 'e.g. image classification benchmark',
+				description: 'Free-text filter over resource names, descriptions, topics, and README text',
+				routing: { send: { type: 'query', property: 'q' } },
+			},
+			resourceSortOption,
+			{
+				displayName: 'Updated After',
+				name: 'updatedAfter',
+				type: 'string',
+				default: '',
+				placeholder: 'e.g. 2025-01-01',
+				description: 'Only resources the provider updated on or after this date (YYYY-MM-DD)',
+				routing: { send: { type: 'query', property: 'updated_after' } },
+			},
+		],
+	},
+];

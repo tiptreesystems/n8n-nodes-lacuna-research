@@ -1,0 +1,57 @@
+{
+	"name": "n8n-nodes-lacuna-research",
+	"version": "0.1.0",
+	"description": "n8n community node for Lacuna Research: search and read a knowledge graph of machine learning and AI research (papers, research directions, authors, venues, institutions, hypotheses, and linked code, datasets, and models)",
+	"license": "MIT",
+	"homepage": "https://lacuna.tiptreesystems.com",
+	"keywords": [
+		"n8n-community-node-package",
+		"lacuna",
+		"research",
+		"papers",
+		"arxiv",
+		"machine-learning",
+		"literature-search"
+	],
+	"author": {
+		"name": "Tiptree Systems",
+		"email": "lacuna@tiptreesystems.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/tiptreesystems/n8n-nodes-lacuna-research.git"
+	},
+	"bugs": {
+		"url": "https://github.com/tiptreesystems/n8n-nodes-lacuna-research/issues"
+	},
+	"scripts": {
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"release": "n8n-node release",
+		"prepublishOnly": "n8n-node prerelease"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [],
+		"nodes": [
+			"dist/nodes/LacunaResearch/LacunaResearch.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "^0.55.4",
+		"eslint": "9.32.0",
+		"prettier": "3.6.2",
+		"release-it": "^21.1.0",
+		"typescript": "5.9.2"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	}
+}

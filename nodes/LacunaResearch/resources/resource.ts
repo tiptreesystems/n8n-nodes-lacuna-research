@@ -2,8 +2,7 @@ import type { INodeProperties } from 'n8n-workflow';
 import {
 	idFromParameter,
 	itemsFrom,
-	limitField,
-	offsetOption,
+	listFields,
 	RESOURCE_ID,
 	resourceKindOption,
 	resourceProviderOption,
@@ -52,7 +51,7 @@ export const resourceDescription: INodeProperties[] = [
 		description: 'Lacuna resource ID (art_…) or the URL of a Lacuna resource page',
 		displayOptions: { show: { ...show, operation: ['get'] } },
 	},
-	limitField({ ...show, operation: ['getAll'] }, 200),
+	...listFields({ ...show, operation: ['getAll'] }, 200),
 	{
 		displayName: 'Filters',
 		name: 'filters',
@@ -88,7 +87,6 @@ export const resourceDescription: INodeProperties[] = [
 				description: 'Only resources with at least this many stars',
 				routing: { send: { type: 'query', property: 'min_stars' } },
 			},
-			offsetOption,
 			{
 				displayName: 'Owner Author ID',
 				name: 'ownerAuthorId',

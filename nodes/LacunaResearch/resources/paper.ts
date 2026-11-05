@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { idFromParameter, itemsFrom, PAPER_ID, resourceListFields, viewField } from './shared';
+import { idFromParameter, itemsFrom, PAPER_ID, resourceListFields, viewOption, viewQuery } from './shared';
 
 const paperId = idFromParameter('paperId', PAPER_ID);
 const show = { resource: ['paper'] };
@@ -47,6 +47,7 @@ export const paperDescription: INodeProperties[] = [
 					request: {
 						method: 'GET',
 						url: `=/api/v1/context/{{ ${paperId}.startsWith("wrk_") ? "work" : "paper" }}/{{ ${paperId} }}`,
+						qs: viewQuery,
 					},
 				},
 			},
@@ -100,7 +101,6 @@ export const paperDescription: INodeProperties[] = [
 		description: 'Lacuna artifact ID (art_…) or the URL of a Lacuna paper page. Get Context also accepts a work ID (wrk_…).',
 		displayOptions: { show },
 	},
-	viewField({ ...show, operation: ['getContext'] }, 'paper context'),
 	{
 		displayName: 'Options',
 		name: 'options',
@@ -126,6 +126,7 @@ export const paperDescription: INodeProperties[] = [
 				description: 'Whether to include linked code, datasets, models, and demos',
 				routing: { send: { type: 'query', property: 'include_resources' } },
 			},
+			viewOption('paper context'),
 		],
 	},
 	{

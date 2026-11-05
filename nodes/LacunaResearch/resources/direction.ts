@@ -1,5 +1,14 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { DIRECTION_ID, idFromParameter, itemsFrom, limitField, resourceListFields, viewField } from './shared';
+import {
+	DIRECTION_ID,
+	fetchAllPages,
+	idFromParameter,
+	itemsFrom,
+	listFields,
+	resourceListFields,
+	viewOptions,
+	viewQuery,
+} from './shared';
 
 const directionId = idFromParameter('directionId', DIRECTION_ID);
 const show = { resource: ['direction'] };
@@ -27,16 +36,24 @@ export const directionDescription: INodeProperties[] = [
 				description:
 					'Get an agent-oriented summary of a research direction with top papers, authors, and related directions',
 				routing: {
-					request: { method: 'GET', url: `=/api/v1/context/direction/{{ ${directionId} }}` },
+					request: {
+						method: 'GET',
+						url: `=/api/v1/context/direction/{{ ${directionId} }}`,
+						qs: viewQuery,
+					},
 				},
 			},
 			{
 				name: 'Get Papers',
 				value: 'getPapers',
 				action: 'Get direction papers',
-				description: 'Get one page of the papers in a research direction',
+				description: 'Get the papers in a research direction',
 				routing: {
-					request: { method: 'GET', url: `=/api/v1/clusters/{{ ${directionId} }}/papers` },
+					request: {
+						method: 'GET',
+						url: `=/api/v1/clusters/{{ ${directionId} }}/papers`,
+						qs: viewQuery,
+					},
 					output: itemsFrom('papers'),
 				},
 			},
@@ -64,8 +81,9 @@ export const directionDescription: INodeProperties[] = [
 		description: 'Numeric Lacuna direction ID or the URL of a Lacuna direction page',
 		displayOptions: { show },
 	},
-	viewField({ ...show, operation: ['getContext'] }, 'direction context'),
-	limitField({ ...show, operation: ['getPapers'] }, 100),
+	viewOptions({ ...show, operation: ['getContext'] }, 'direction context'),
+	// This endpoint takes `page` and ignores `offset`, so it cannot use the built-in offset pagination.
+	...listFields({ ...show, operation: ['getPapers'] }, 100, fetchAllPages),
 	{
 		displayName: 'Options',
 		name: 'options',
@@ -74,15 +92,6 @@ export const directionDescription: INodeProperties[] = [
 		default: {},
 		displayOptions: { show: { ...show, operation: ['getPapers'] } },
 		options: [
-			{
-				displayName: 'Page',
-				name: 'page',
-				type: 'number',
-				default: 1,
-				typeOptions: { minValue: 1 },
-				description: 'Which page of papers to return',
-				routing: { send: { type: 'query', property: 'page' } },
-			},
 			{
 				displayName: 'View',
 				name: 'view',
@@ -97,7 +106,6 @@ export const directionDescription: INodeProperties[] = [
 					},
 					{ name: 'Complete', value: 'complete', description: 'The raw paper record' },
 				],
-				routing: { send: { type: 'query', property: 'view' } },
 			},
 		],
 	},

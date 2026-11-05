@@ -1,4 +1,10 @@
-import type { IDisplayOptions, INodeProperties } from 'n8n-workflow';
+import type {
+	DeclarativeRestApiSettings,
+	IDisplayOptions,
+	IExecutePaginationFunctions,
+	INodeExecutionData,
+	INodeProperties,
+} from 'n8n-workflow';
 
 /** Regular-expression fragments that pick a Lacuna identifier out of an ID or a page URL. */
 export const PAPER_ID = '(art|wrk)_[0-9a-f]{32}';
@@ -39,17 +45,74 @@ export function limitField(show: IDisplayOptions['show'], maxValue: number): INo
 	};
 }
 
-export const offsetOption: INodeProperties = {
-	displayName: 'Offset',
-	name: 'offset',
-	type: 'number',
-	default: 0,
-	typeOptions: { minValue: 0 },
-	description: 'Number of results to skip, for paging through long lists',
-	routing: { send: { type: 'query', property: 'offset' } },
-};
+/** Every list endpoint accepts at least this many results per request. */
+const PAGE_SIZE = 100;
 
-export function viewField(show: IDisplayOptions['show'], what: string): INodeProperties {
+/**
+ * Fetches every page of an endpoint that takes `page` instead of `offset`. Each page goes
+ * through the operation's own response handling, so it arrives here as one item per result.
+ */
+export async function fetchAllPages(
+	this: IExecutePaginationFunctions,
+	requestData: DeclarativeRestApiSettings.ResultOptions,
+): Promise<INodeExecutionData[]> {
+	const items: INodeExecutionData[] = [];
+	for (let page = 1; ; page++) {
+		const batch = await this.makeRoutingRequest({
+			...requestData,
+			options: {
+				...requestData.options,
+				qs: { ...requestData.options.qs, limit: PAGE_SIZE, page },
+			},
+		});
+		items.push(...batch);
+		if (batch.length < PAGE_SIZE) return items;
+	}
+}
+
+/**
+ * Return All plus a Limit that only shows when Return All is off. The operation's
+ * `itemsFrom` has already unpacked each page, so the pagination needs no root property.
+ */
+export function listFields(
+	show: IDisplayOptions['show'],
+	maxLimit: number,
+	pagination: NonNullable<
+		NonNullable<INodeProperties['routing']>['operations']
+	>['pagination'] = {
+		type: 'offset',
+		properties: {
+			limitParameter: 'limit',
+			offsetParameter: 'offset',
+			pageSize: PAGE_SIZE,
+			type: 'query',
+		},
+	},
+): INodeProperties[] {
+	return [
+		{
+			displayName: 'Return All',
+			name: 'returnAll',
+			type: 'boolean',
+			default: false,
+			description: 'Whether to return all results or only up to a given limit',
+			displayOptions: { show },
+			routing: {
+				send: { paginate: '={{ $value }}' },
+				operations: { pagination },
+			},
+		},
+		limitField({ ...show, returnAll: [false] }, maxLimit),
+	];
+}
+
+/**
+ * The API returns the complete view when `view` is absent, so a request has to ask for the
+ * compact view itself. Add this to the request of any operation that has a View option.
+ */
+export const viewQuery = { view: '={{ $parameter["options"]["view"] || "compact" }}' };
+
+export function viewOption(what: string): INodeProperties {
 	return {
 		displayName: 'View',
 		name: 'view',
@@ -68,8 +131,19 @@ export function viewField(show: IDisplayOptions['show'], what: string): INodePro
 				description: 'Everything, including the raw record and full lists',
 			},
 		],
+	};
+}
+
+/** Options collection holding only the View choice, for Get Context operations. */
+export function viewOptions(show: IDisplayOptions['show'], what: string): INodeProperties {
+	return {
+		displayName: 'Options',
+		name: 'options',
+		type: 'collection',
+		placeholder: 'Add Option',
+		default: {},
 		displayOptions: { show },
-		routing: { send: { type: 'query', property: 'view' } },
+		options: [viewOption(what)],
 	};
 }
 
@@ -117,10 +191,10 @@ export const resourceSortOption: INodeProperties = {
 	routing: { send: { type: 'query', property: 'sort' } },
 };
 
-/** Query, kind, provider, sort, and paging controls shared by every "Get Resources" operation. */
+/** Return All, Limit, and the query, kind, provider, and sort filters shared by every "Get Resources" operation. */
 export function resourceListFields(show: IDisplayOptions['show']): INodeProperties[] {
 	return [
-		limitField(show, 200),
+		...listFields(show, 200),
 		{
 			displayName: 'Filters',
 			name: 'filters',
@@ -130,7 +204,6 @@ export function resourceListFields(show: IDisplayOptions['show']): INodeProperti
 			displayOptions: { show },
 			options: [
 				resourceKindOption,
-				offsetOption,
 				resourceProviderOption,
 				{
 					displayName: 'Query',

@@ -4,14 +4,15 @@ import {
 	idFromParameter,
 	itemsFrom,
 	limitField,
-	offsetOption,
+	listFields,
 	resourceListFields,
-	viewField,
+	viewOption,
+	viewQuery,
 } from './shared';
 
 const authorId = idFromParameter('authorId', AUTHOR_ID);
 const show = { resource: ['author'] };
-const pagedOperations = ['getDirections', 'getNeighbors', 'getPapers'];
+const pagedOperations = ['getDirections', 'getPapers'];
 
 export const authorDescription: INodeProperties[] = [
 	{
@@ -34,7 +35,13 @@ export const authorDescription: INodeProperties[] = [
 				action: 'Get author context',
 				description:
 					'Get an agent-oriented profile of an author with recent papers and research directions',
-				routing: { request: { method: 'GET', url: `=/api/v1/context/author/{{ ${authorId} }}` } },
+				routing: {
+					request: {
+						method: 'GET',
+						url: `=/api/v1/context/author/{{ ${authorId} }}`,
+						qs: viewQuery,
+					},
+				},
 			},
 			{
 				name: 'Get Directions',
@@ -106,12 +113,13 @@ export const authorDescription: INodeProperties[] = [
 		default: '',
 		placeholder: 'e.g. aut_9a43ce0c12d4446283619cfb922f1e17 or hugo-larochelle',
 		description: 'Lacuna author ID (aut_…), author page slug, or the URL of a Lacuna author page',
-		displayOptions: { show: { ...show, operation: ['get', 'getContext', 'getImpact', 'getResources', ...pagedOperations] } },
+		displayOptions: { show: { ...show, operation: ['get', 'getContext', 'getImpact', 'getNeighbors', 'getResources', ...pagedOperations] } },
 	},
 	{
 		displayName: 'Identifier Type',
 		name: 'identifierType',
 		type: 'options',
+		required: true,
 		default: 'orcid',
 		description: 'Which public identifier is being looked up',
 		options: [
@@ -140,7 +148,6 @@ export const authorDescription: INodeProperties[] = [
 		displayOptions: { show: { ...show, operation: ['resolve'] } },
 		routing: { send: { type: 'query', property: 'identifier' } },
 	},
-	viewField({ ...show, operation: ['getContext'] }, 'author profile'),
 	{
 		displayName: 'Options',
 		name: 'options',
@@ -157,6 +164,7 @@ export const authorDescription: INodeProperties[] = [
 				description: 'Whether to include similar authors. This can add several seconds of latency.',
 				routing: { send: { type: 'query', property: 'include_neighbors' } },
 			},
+			viewOption('author profile'),
 		],
 	},
 	{
@@ -177,15 +185,7 @@ export const authorDescription: INodeProperties[] = [
 			},
 		],
 	},
-	limitField({ ...show, operation: pagedOperations }, 200),
-	{
-		displayName: 'Options',
-		name: 'options',
-		type: 'collection',
-		placeholder: 'Add Option',
-		default: {},
-		displayOptions: { show: { ...show, operation: pagedOperations } },
-		options: [offsetOption],
-	},
+	...listFields({ ...show, operation: pagedOperations }, 200),
+	limitField({ ...show, operation: ['getNeighbors'] }, 200),
 	...resourceListFields({ ...show, operation: ['getResources'] }),
 ];

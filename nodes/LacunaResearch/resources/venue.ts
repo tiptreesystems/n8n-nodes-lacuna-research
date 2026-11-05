@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { idFromParameter, viewField } from './shared';
+import { idFromParameter, viewOption, viewQuery } from './shared';
 
 const venueKey = idFromParameter('venue');
 const show = { resource: ['venue'] };
@@ -21,7 +21,8 @@ export const venueDescription: INodeProperties[] = [
 				routing: {
 					request: {
 						method: 'GET',
-						url: `=/api/v1/context/venue/{{ ${venueKey} }}{{ $parameter["year"] ? "/" + $parameter["year"] : "" }}`,
+						url: `=/api/v1/context/venue/{{ ${venueKey} }}{{ $parameter["options"]["year"] ? "/" + $parameter["options"]["year"] : "" }}`,
+						qs: viewQuery,
 					},
 				},
 			},
@@ -39,13 +40,22 @@ export const venueDescription: INodeProperties[] = [
 		displayOptions: { show },
 	},
 	{
-		displayName: 'Year',
-		name: 'year',
-		type: 'number',
-		default: 0,
-		typeOptions: { minValue: 0 },
-		description: 'Restrict the summary to one edition year. Use 0 for all years.',
+		displayName: 'Options',
+		name: 'options',
+		type: 'collection',
+		placeholder: 'Add Option',
+		default: {},
 		displayOptions: { show },
+		options: [
+			viewOption('venue context'),
+			{
+				displayName: 'Year',
+				name: 'year',
+				type: 'number',
+				default: 2025,
+				typeOptions: { minValue: 1900 },
+				description: 'Restrict the summary to one edition year',
+			},
+		],
 	},
-	viewField({ ...show, operation: ['getContext'] }, 'venue context'),
 ];

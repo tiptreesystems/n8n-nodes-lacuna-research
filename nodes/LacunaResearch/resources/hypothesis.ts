@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { HYPOTHESIS_ID, idFromParameter, viewField } from './shared';
+import { HYPOTHESIS_ID, idFromParameter, viewOptions, viewQuery } from './shared';
 
 const hypothesisId = idFromParameter('hypothesisId', HYPOTHESIS_ID);
 const show = { resource: ['hypothesis'] };
@@ -26,7 +26,11 @@ export const hypothesisDescription: INodeProperties[] = [
 				description:
 					'Get an agent-oriented summary of a generated research hypothesis with its motivation, approach, experiments, and source directions',
 				routing: {
-					request: { method: 'GET', url: `=/api/v1/context/hypothesis/{{ ${hypothesisId} }}` },
+					request: {
+						method: 'GET',
+						url: `=/api/v1/context/hypothesis/{{ ${hypothesisId} }}`,
+						qs: viewQuery,
+					},
 				},
 			},
 		],
@@ -42,5 +46,5 @@ export const hypothesisDescription: INodeProperties[] = [
 		description: 'Lacuna hypothesis ID or the URL of a Lacuna hypothesis page',
 		displayOptions: { show },
 	},
-	viewField({ ...show, operation: ['getContext'] }, 'hypothesis context'),
+	viewOptions({ ...show, operation: ['getContext'] }, 'hypothesis context'),
 ];

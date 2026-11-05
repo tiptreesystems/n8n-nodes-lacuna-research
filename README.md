@@ -43,10 +43,10 @@ Every operation is a GET request against `https://lacuna.tiptreesystems.com/api/
 | Author | Resolve | The Lacuna author matching an ORCID, Google Scholar ID, OpenReview profile, DBLP PID, OpenAlex ID, Semantic Scholar ID, homepage, GitHub, or LinkedIn URL |
 | Direction | Get | The full research direction record with its article and samples |
 | Direction | Get Context | An agent-oriented summary with top papers, authors, and related directions |
-| Direction | Get Papers | One page of the papers in the direction |
+| Direction | Get Papers | The papers in the direction |
 | Direction | Get Resources | Resources linked to papers in the direction |
 | Venue | Get Context | A venue summary with top directions, authors, representative papers, and activity by year, optionally for one edition year |
-| Institution | Get Authors | One page of affiliated authors |
+| Institution | Get Authors | Authors affiliated with the institution |
 | Institution | Get Context | An institution summary with its most active authors |
 | Hypothesis | Get | The full generated hypothesis with every version |
 | Hypothesis | Get Context | A summary with motivation, approach, experiments, and source directions |
@@ -68,11 +68,11 @@ Built with `@n8n/node-cli` and tested against the current n8n release. The node 
 
 **Finding IDs.** Run a Search first. Each result carries its `id` and Lacuna `url`, which you can pass to the Get operations of the matching resource.
 
-**Views.** Context operations default to the compact view, which is sized for AI agents and summaries. Switch to the complete view for raw records and full lists.
+**Views.** Context operations and Direction Get Papers return the compact view, which is sized for AI agents and summaries. Add View under Options and pick Complete for raw records and full lists.
 
 **AI agents.** The node is marked as usable as a tool, so it can be attached to an AI Agent node. A typical setup is one tool instance for `Search → Search` with the Query field set to be filled by the model, and one for `Paper → Get Context`.
 
-**Paging.** List operations take a Limit and, under Options or Filters, an Offset (or a Page for direction papers). Search returns at most 50 results per call.
+**Paging.** List operations have a Return All switch that fetches every page for you, and a Limit when it is off. Search and Get Neighbors return ranked top results, so they take a Limit only. Search returns at most 50 results per call, with an Offset under Additional Fields.
 
 ## Resources
 

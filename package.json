@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-lacuna-research",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "n8n community node for Lacuna Research: search and read a knowledge graph of machine learning and AI research (papers, research directions, authors, venues, institutions, hypotheses, and linked code, datasets, and models)",
 	"license": "MIT",
 	"homepage": "https://lacuna.tiptreesystems.com",
